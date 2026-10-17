@@ -1,0 +1,23 @@
+<!doctype html>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+html,body { margin:0; height:100%; overflow:hidden; background:transparent; color:#b9ffc9; font:600 20px sans-serif }
+body { display:grid; place-content:center; text-align:center; gap:5px }
+small { font-size:10px; letter-spacing:.12em; opacity:.7 }
+#rail { height:3px; background:currentColor; transform:scaleX(0); transform-origin:left; transition:transform .15s }
+@media (prefers-reduced-motion:reduce) { #rail { transition:none } }
+</style>
+<small id="title">CUSTOM DENT</small>
+<div id="value">Ready</div>
+<div id="rail"></div>
+<script>
+addEventListener('message', event => {
+  if (event.source !== parent || event.data?.type !== 'dentupdate') return;
+  const data = event.data.data;
+  document.querySelector('#title').textContent = data.title || data.kind;
+  document.querySelector('#value').textContent = data.value || data.metrics?.[0]?.value || '';
+  const progress = Number.isFinite(data.progress) ? Math.max(0, Math.min(1, data.progress)) : 0;
+  document.querySelector('#rail').style.transform = `scaleX(${progress})`;
+});
+</script>
+

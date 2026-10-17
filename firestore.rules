@@ -1,0 +1,23 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() { return request.auth != null; }
+    function admin() { return signedIn() && request.auth.token.admin == true; }
+    function owner(data) { return signedIn() && data.ownerId == request.auth.uid; }
+    match /profiles/{uid} { allow read: if true; allow write: if false; }
+    match /handles/{handle} { allow read: if true; allow write: if false; }
+    match /dents/{id} {
+      allow read: if resource.data.status == 'published' || owner(resource.data) || admin();
+      allow write: if false;
+      match /versions/{version} {
+        allow read: if get(/databases/$(database)/documents/dents/$(id)).data.status == 'published'
+          || owner(get(/databases/$(database)/documents/dents/$(id)).data) || admin();
+        allow write: if false;
+      }
+    }
+    match /drafts/{id} { allow read: if owner(resource.data) || admin(); allow write: if false; }
+    match /users/{uid}/{collection}/{id} { allow read: if signedIn() && request.auth.uid == uid; allow write: if false; }
+    match /reports/{id} { allow read: if admin(); allow write: if false; }
+    match /{document=**} { allow read, write: if false; }
+  }
+}

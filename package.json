@@ -1,0 +1,39 @@
+{
+  "name": "booplio-marketplace",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview --host 0.0.0.0",
+    "test": "vitest run",
+    "test:rules": "firebase emulators:exec --project demo-booplio --only firestore,storage 'vitest run tests/rules.test.ts'",
+    "test:integration": "firebase emulators:exec --project demo-booplio --only auth,firestore,storage \"node tests/integration.mjs\"",
+    "firebase:setup": "node scripts/configure.mjs",
+    "backend:build": "npm --prefix functions run build",
+    "test:emulators": "firebase emulators:exec --project demo-booplio --only auth,firestore,storage \"vitest run tests/rules.test.ts && node tests/integration.mjs\""
+  },
+  "dependencies": {
+    "firebase": "^12.9.0",
+    "lucide-react": "^0.468.0",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "react-router-dom": "^7.9.4"
+  },
+  "devDependencies": {
+    "@firebase/rules-unit-testing": "^5.0.0",
+    "@fontsource/dm-sans": "^5.2.8",
+    "@fontsource/fredoka": "^5.2.8",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "@vitejs/plugin-react": "^5.0.4",
+    "firebase-tools": "^14.22.0",
+    "typescript": "~5.9.3",
+    "vite": "^7.1.10",
+    "vitest": "^3.2.4"
+  },
+  "overrides": {
+    "@grpc/grpc-js": "^1.14.6"
+  }
+}
