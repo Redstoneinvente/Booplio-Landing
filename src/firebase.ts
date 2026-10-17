@@ -1,3 +1,4 @@
+import project from "./firebase-project.json";
 import { initializeApp } from "firebase/app";
 import { getAuth, connectAuthEmulator } from "firebase/auth";
 import { getFirestore, connectFirestoreEmulator } from "firebase/firestore";
@@ -8,29 +9,43 @@ import {
 } from "firebase/functions";
 import { initializeAppCheck, ReCaptchaV3Provider } from "firebase/app-check";
 const e = import.meta.env;
+const defaults: Record<string, string | undefined> = {
+  VITE_FIREBASE_API_KEY: project.apiKey,
+  VITE_FIREBASE_AUTH_DOMAIN: project.authDomain,
+  VITE_FIREBASE_PROJECT_ID: project.projectId,
+  VITE_FIREBASE_STORAGE_BUCKET: project.storageBucket,
+  VITE_FIREBASE_MESSAGING_SENDER_ID: project.messagingSenderId,
+  VITE_FIREBASE_APP_ID: project.appId,
+};
+const env = new Proxy(e, {
+  get(target, key: string) {
+    return target[key] || defaults[key];
+  },
+});
+
 export const configured = Boolean(
-  e.VITE_FIREBASE_API_KEY &&
-    e.VITE_FIREBASE_PROJECT_ID &&
-    e.VITE_FIREBASE_APP_ID,
+  env.VITE_FIREBASE_API_KEY &&
+    env.VITE_FIREBASE_PROJECT_ID &&
+    env.VITE_FIREBASE_APP_ID,
 );
 const app = configured
   ? initializeApp({
-      apiKey: e.VITE_FIREBASE_API_KEY,
-      authDomain: e.VITE_FIREBASE_AUTH_DOMAIN,
-      projectId: e.VITE_FIREBASE_PROJECT_ID,
-      storageBucket: e.VITE_FIREBASE_STORAGE_BUCKET,
-      messagingSenderId: e.VITE_FIREBASE_MESSAGING_SENDER_ID,
-      appId: e.VITE_FIREBASE_APP_ID,
+      apiKey: env.VITE_FIREBASE_API_KEY,
+      authDomain: env.VITE_FIREBASE_AUTH_DOMAIN,
+      projectId: env.VITE_FIREBASE_PROJECT_ID,
+      storageBucket: env.VITE_FIREBASE_STORAGE_BUCKET,
+      messagingSenderId: env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+      appId: env.VITE_FIREBASE_APP_ID,
     })
   : null;
 export const auth = app ? getAuth(app) : null;
 export const db = app ? getFirestore(app) : null;
 const functions = app
-  ? getFunctions(app, e.VITE_FIREBASE_FUNCTIONS_REGION || "us-central1")
+  ? getFunctions(app, env.VITE_FIREBASE_FUNCTIONS_REGION || "us-central1")
   : null;
-if (app && e.VITE_FIREBASE_APPCHECK_SITE_KEY)
+if (app && env.VITE_FIREBASE_APPCHECK_SITE_KEY)
   initializeAppCheck(app, {
-    provider: new ReCaptchaV3Provider(e.VITE_FIREBASE_APPCHECK_SITE_KEY),
+    provider: new ReCaptchaV3Provider(env.VITE_FIREBASE_APPCHECK_SITE_KEY),
     isTokenAutoRefreshEnabled: true,
   });
 if (
@@ -38,7 +53,7 @@ if (
   auth &&
   db &&
   functions &&
-  e.VITE_USE_EMULATORS === "true" &&
+  env.VITE_USE_EMULATORS === "true" &&
   ["localhost", "127.0.0.1"].includes(location.hostname)
 ) {
   connectAuthEmulator(auth, "http://127.0.0.1:9099", { disableWarnings: true });

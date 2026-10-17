@@ -15,6 +15,14 @@ A free community marketplace for Booplio custom screen-edge dents. Responsive Re
 
 Everything in the marketplace is free to visitors. Running Firebase Storage and Cloud Functions requires a Blaze billing account. Usage charges can apply beyond the included quotas. Set billing alerts in Google Cloud.
 
+## Connected project
+
+The production web app is configured for Firebase project `booplio-redstoneinvente` (US central). Its public SDK configuration is in `src/firebase-project.json`; `VITE_FIREBASE_…` environment values override it. These web configuration values are public identifiers, not administrator credentials. Accounts use Google or passwordless email links, and `booplio.redstoneinvente.com` is an authorized sign-in domain.
+
+The initial Hosting deployment is `https://booplio-redstoneinvente.web.app`. Cloudflare Pages can build the same repository with `npm run build` and output directory `dist`; security headers are supplied by `public/_headers`.
+
+Cloud Functions and Storage deployment still require a Blaze billing account and a default Storage bucket. After upgrading in the Firebase console, create the default bucket in `us-central1`, then deploy `functions,storage`. The expected bucket name is `booplio-redstoneinvente.firebasestorage.app`. Do not treat the backend as live until that deployment succeeds.
+
 ## Activate Firebase
 
 If using ChatGPT Work, the official Firebase plugin can also create/configure the project after you connect your Google account. The steps below are the CLI alternative.
