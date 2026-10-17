@@ -21,7 +21,15 @@ The production web app is configured for Firebase project `booplio-redstoneinven
 
 The initial Hosting deployment is `https://booplio-redstoneinvente.web.app`. Cloudflare Pages can build the same repository with `npm run build` and output directory `dist`; security headers are supplied by `public/_headers`.
 
-Cloud Functions and Storage deployment still require a Blaze billing account and a default Storage bucket. After upgrading in the Firebase console, create the default bucket in `us-central1`, then deploy `functions,storage`. The expected bucket name is `booplio-redstoneinvente.firebasestorage.app`. Do not treat the backend as live until that deployment succeeds.
+Blaze billing is active. All 14 Node.js 22 Cloud Functions are deployed in `us-central1`, and the private default Storage bucket is `booplio-redstoneinvente.firebasestorage.app`. Its rules deny direct client reads and writes; files are accessed through the callable backend. Function images have a one-day Artifact Registry cleanup policy.
+
+Live deployment checks passed: all functions report ACTIVE and reference the correct bucket; unauthenticated draft and moderation calls return 401; a missing public dent returns 404; anonymous direct Storage access returns 403. The authenticated upload-to-publication lifecycle has been tested in the Firebase emulators. Marketplace administrator access must be granted separately to the intended owner account; it is not assigned automatically to every Firebase project user.
+
+If local function discovery cannot open a loopback server, use the CLI’s file-based discovery mode:
+
+```sh
+FIREBASE_FUNCTIONS_DISCOVERY_OUTPUT_PATH=true npx -y firebase-tools@latest deploy --only functions --project booplio-redstoneinvente
+```
 
 ## Activate Firebase
 
@@ -44,9 +52,9 @@ The setup command asks for the six public web configuration values and writes ig
 6. Deploy the website and backend:
 
 ```sh
-npx firebase login
+npx -y firebase-tools@latest login
 npm run build
-npx firebase deploy
+npx -y firebase-tools@latest deploy
 ```
 
 This deploys Hosting, Firestore indexes/rules, Storage rules and Cloud Functions. The functions are in `us-central1`; change `setGlobalOptions` and `VITE_FIREBASE_FUNCTIONS_REGION` together if using another region. Allow indexes to finish building before testing searches. The CLI may ask about Cloud Run artifact cleanup policies; choose a short retention period.
@@ -65,7 +73,7 @@ Run this locally with your own Google Cloud permissions, never in the browser. A
 
 Firebase Hosting is the simplest deployment because `firebase.json` supplies security headers. GitHub Pages can host the frontend while Firebase still handles accounts, data, files and functions.
 
-1. Deploy the Firebase backend first: `npx firebase deploy --only firestore,storage,functions`.
+1. Deploy the Firebase backend first: `npx -y firebase-tools@latest deploy --only firestore,storage,functions`.
 2. In repository **Settings → Pages**, choose **GitHub Actions** as the source.
 3. Add the six `VITE_FIREBASE_…` values as repository **Actions variables**, matching `.env.example`. These are public Firebase web configuration. Optionally add `VITE_PLAY_STORE_URL` after the app listing exists.
 4. Run **Publish marketplace to GitHub Pages** under Actions. The workflow is manual so unconfigured Firebase changes do not automatically replace a live site.
