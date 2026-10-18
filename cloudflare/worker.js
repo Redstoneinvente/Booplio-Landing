@@ -18,11 +18,11 @@ export default {
       const id = url.pathname.split("/")[3];
       const starter = starterIds.has(id);
       const response = starter
-        ? await env.ASSETS.fetch(new Request(new URL(`/dents/${id.slice(8)}.html`, request.url), { method: request.method }))
+        ? await env.ASSETS.fetch(new Request(new URL(`/template-files/${id}.bin`, request.url), { method: request.method }))
         : await fetch(`${backend}${url.pathname}`, { method: request.method, redirect: "manual", signal: AbortSignal.timeout(25000) });
       if (response.status !== 200) return new Response(response.status === 404 ? "This template is unavailable or unpublished." : "Template download unavailable. Try again later.", { status: response.status === 404 ? 404 : 503, headers: safeHeaders });
       const length = Number(response.headers.get("Content-Length"));
-      if ((response.headers.has("Content-Length") && (!Number.isFinite(length) || length > maxBytes)) || !response.headers.get("Content-Type")?.startsWith("text/html")) throw new Error("Invalid response");
+      if ((response.headers.has("Content-Length") && (!Number.isFinite(length) || length > maxBytes)) || !(response.headers.get("Content-Type")?.startsWith("text/html") || (starter && response.headers.get("Content-Type")?.startsWith("application/octet-stream")))) throw new Error("Invalid response");
       const headers = { ...safeHeaders, "Content-Type": "text/html; charset=utf-8", "Content-Disposition": `attachment; filename="${url.pathname.split("/")[3]}.html"`, "Content-Length": String(length) };
       if (request.method === "HEAD") return new Response(null, { headers });
       const reader = response.body.getReader();

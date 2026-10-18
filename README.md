@@ -157,6 +157,8 @@ For Firebase Hosting, `firebase.json` routes `/api/**` to `templateDownload` bef
 FIREBASE_FUNCTIONS_DISCOVERY_OUTPUT_PATH=true npx -y firebase-tools@latest deploy --only functions:templateDownload,hosting --project booplio-redstoneinvente --non-interactive
 ```
 
+The connected Cloudflare project uses **Workers Builds** (`booplio-landing`). `wrangler.jsonc` configures the same download Worker, static `dist` assets, and SPA fallback for native entry URLs. Keep build command `npm run build` and deploy command `npx wrangler deploy`. Only `/api/*` runs through the Worker; asset requests and browser fallback pages use static asset routing. `.assetsignore` excludes the Pages-specific Worker output from Workers static assets.
+
 For Cloudflare Pages, keep build command `npm run build` and output `dist`. The build emits an advanced-mode `_worker.js` and `_routes.json` that route only `/api/*` through the Worker. Starter downloads are served from the Pages asset binding; community downloads proxy the public Firebase HTTP function without forwarding cookies or authorization headers. It rejects redirects, oversized/non-UTF-8 responses and unexpected content types. Do not deploy the Firebase `functions/` folder as Pages Functions: the generated advanced-mode Worker replaces Pages' folder-based routing. Firebase Hosting ignores the Cloudflare-specific output files. A plain GitHub Pages deployment cannot serve this dynamic API.
 
 ### Verified Android links

@@ -72,7 +72,7 @@ describe("bounded public HTML responses", () => {
     const req = new Request("https://booplio.redstoneinvente.com/api/templates/starter-citrus-charge/download");
     const response = await worker.fetch(req, { ASSETS: assets });
     expect(await response.text()).toBe(html);
-    expect(assets.fetch.mock.calls[0][0].url).toBe("https://booplio.redstoneinvente.com/dents/citrus-charge.html");
+    expect(assets.fetch.mock.calls[0][0].url).toBe("https://booplio.redstoneinvente.com/template-files/starter-citrus-charge.bin");
     expect(upstream).not.toHaveBeenCalled();
     const community = new Request("https://booplio.redstoneinvente.com/api/templates/community/download");
     vi.stubGlobal("fetch", async () => new Response(new Uint8Array([255]), { headers: { "Content-Type": "text/html" } }));

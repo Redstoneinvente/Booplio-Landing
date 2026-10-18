@@ -2,6 +2,12 @@ import { copyFile, mkdir, readFile, writeFile } from "node:fs/promises";
 const root = new URL("../", import.meta.url);
 await copyFile(new URL("cloudflare/worker.js", root), new URL("dist/_worker.js", root));
 await writeFile(new URL("dist/_routes.json", root), JSON.stringify({ version: 1, include: ["/api/*"], exclude: [] }));
+const sizes = JSON.parse(await readFile(new URL("src/starter-sizes.json", root), "utf8"));
+await mkdir(new URL("dist/template-files/", root), { recursive: true });
+for (const id of Object.keys(sizes)) {
+  if (!/^starter-[a-z0-9-]+$/.test(id)) throw new Error("Invalid starter id");
+  await copyFile(new URL(`public/dents/${id.slice(8)}.html`, root), new URL(`dist/template-files/${id}.bin`, root));
+}
 const configured = JSON.parse(await readFile(new URL("android-app-links.json", root), "utf8"));
 const fingerprints = process.env.BOOPLIO_PLAY_SIGNING_SHA256 ? process.env.BOOPLIO_PLAY_SIGNING_SHA256.split(",").map(v => v.trim()) : configured.playSigningFingerprints;
 if (!Array.isArray(fingerprints) || fingerprints.some(v => !/^([A-Fa-f0-9]{2}:){31}[A-Fa-f0-9]{2}$/.test(v))) throw new Error("Invalid Play signing SHA-256 fingerprint");
