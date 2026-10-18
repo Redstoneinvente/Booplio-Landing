@@ -82,6 +82,19 @@ async function denied(name, data, jwt) {
   const r = await invoke(name, data, jwt);
   assert.ok(r.status >= 400, `${name} unexpectedly succeeded`);
 }
+async function publicFile(id, status, expected) {
+  const response = {
+    set() { return this; },
+    status(code) { this.code = code; return this; },
+    type() { return this; },
+    send(body) { this.body = body; return this; },
+  };
+  await handlers.templateDownload({ method: "GET", path: `/api/templates/${id}/download`, query: {} }, response);
+  assert.equal(response.code, status, `public download: ${String(response.body)}`);
+  if (expected) assert.ok(response.body.toString().includes(expected));
+}
+await publicFile("starter-citrus-charge", 200, "dentupdate");
+await publicFile("unknown-template", 404);
 const suffix = Date.now(),
   a = await create(`alice-${suffix}@example.com`),
   b = await create(`bob-${suffix}@example.com`),
@@ -141,6 +154,7 @@ await denied(
   alice,
 );
 await denied("getDentFile", { id: d.id });
+await publicFile(d.id, 404);
 await success(
   "moderateDent",
   { id: d.id, action: "approve", note: "Looks good", revision },
@@ -148,6 +162,7 @@ await success(
 );
 const first = await success("getDentFile", { id: d.id, download: true });
 assert.ok(first.html.includes("Version one"));
+await publicFile(d.id, 200, "Version one");
 await success(
   "saveToCollection",
   { id: d.id, saved: true, collection: "Favorites" },
@@ -177,6 +192,7 @@ await success(
 );
 const second = await success("getDentFile", { id: d.id });
 assert.ok(second.html.includes("Version two"));
+await publicFile(d.id, 200, "Version two");
 await success(
   "reportDent",
   {
@@ -188,10 +204,12 @@ await success(
 );
 await success("setDentVisibility", { id: d.id, published: false }, mod);
 await denied("getDentFile", { id: d.id });
+await publicFile(d.id, 404);
 await denied("setDentVisibility", { id: d.id, published: true }, alice);
 await success("setDentVisibility", { id: d.id, published: true }, mod);
 await success("deleteAccount", {}, alice);
 await denied("getDentFile", { id: d.id });
+await publicFile(d.id, 404);
 console.log(
   "PASS: sign-in claims, profile, draft ownership, moderation, anonymous download, collections, live version preservation, reports, moderator takedown and account deletion.",
 );

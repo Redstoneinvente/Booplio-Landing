@@ -10,6 +10,9 @@ import "@fontsource/dm-sans/latin-700.css";
 import "./styles.css";
 import App from "./App";
 import { Store } from "./store";
+import { initialRoute } from "./handoff";
+const entry = initialRoute(location.pathname, location.search, location.hash);
+if (entry && !location.hash) history.replaceState(null, "", `${location.pathname}${location.search}${entry}`);
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <Store>

@@ -31,15 +31,14 @@ export function Guide() {
         <h2>Found something you love?</h2>
         <ol className="guide-steps">
           <li>
-            <strong>Download your dent.</strong>
+            <strong>Send your dent to Booplio.</strong>
             <p>
-              Open its page and choose Download free. No marketplace account
-              needed.
+              Open its page and tap Open in Booplio. Version 2.7.0 or later shows a dent with the design name and category. Review it, then confirm the import or choose Ignore. No marketplace account needed.
             </p>
           </li>
           <li>
-            <strong>Open Booplio on your phone.</strong>
-            <p>Go to Settings → Custom dent designs.</p>
+            <strong>Prefer a file? Download HTML.</strong>
+            <p>If the app doesn’t open, download the HTML file, then go to Booplio → Settings → Custom dent designs. You can also use your file manager’s Open with or Share option and choose Booplio.</p>
           </li>
           <li>
             <strong>Pick the matching category.</strong>

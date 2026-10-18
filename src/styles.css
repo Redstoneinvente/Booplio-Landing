@@ -3855,3 +3855,9 @@ details summary {
 main:focus {
   outline: none;
 }
+
+.handoff-launch { position: relative; margin-top: 20px; }
+.handoff-badge { pointer-events: none; position: fixed; z-index: 100; left: 50%; bottom: 20%; display: flex; gap: 10px; align-items: center; max-width: 85vw; border-radius: 24px; background: #18171b; color: #f7f4ec; padding: 16px 22px; box-shadow: 0 12px 48px #18171b33; opacity: 0; transform: translateX(-50%); }
+.handoff-launch + .fine-print { margin-bottom: 18px; }
+.detail-copy > .notice { margin: 16px 0; }
+@media (prefers-reduced-motion: reduce) { .handoff-badge { display: none; } }

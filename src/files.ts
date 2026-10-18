@@ -7,7 +7,7 @@ export async function dentFile(
   revision?: string,
 ): Promise<{ html: string; filename: string }> {
   if (dent.builtin && dent.file) {
-    const res = await fetch(`${import.meta.env.BASE_URL}${dent.file}`);
+    const res = await fetch(`/${dent.file}`);
     if (!res.ok)
       throw new Error("The file could not be downloaded. Please try again.");
     return { html: await res.text(), filename: dent.file.split("/").at(-1)! };

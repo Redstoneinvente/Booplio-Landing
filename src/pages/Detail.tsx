@@ -38,9 +38,12 @@ import {
   Empty,
   DentCard,
 } from "../components/UI";
+import { OpenInBooplio } from "../components/OpenInBooplio";
+import type { TemplateLink } from "../handoff";
 import { LivePreview } from "../components/Preview";
-export function Detail() {
-  const { id } = useParams();
+export function Detail({ templateId, handoff }: { templateId?: string; handoff?: TemplateLink } = {}) {
+  const params = useParams();
+  const id = templateId || params.id;
   const { dents, user, toast } = useStore();
   const [dent, setDent] = useState<Dent | null>(
       dents.find((d) => d.id === id) || null,
@@ -227,9 +230,12 @@ export function Detail() {
               </span>
             )}
           </div>
-          <BusyButton action={() => download()} className="button lime full">
+          <OpenInBooplio dent={dent} fallback={handoff ? { ...handoff, kind: dent.category, name: dent.title } : undefined} />
+          <p className="fine-print center">Booplio 2.7.0+ · Review and confirm in the app</p>
+          {handoff && <div className="notice"><div><strong>A little dent, ready for your phone.</strong><p>Tap Open in Booplio to continue. If the app doesn’t open, download the HTML file below and import it in Custom dent designs. Creator designs contain custom code. Only import designs you trust.</p></div></div>}
+          <BusyButton action={() => download()} className="button secondary full">
             <Download size={18} />
-            Download free
+            {handoff ? "Download HTML" : "Download free"}
           </BusyButton>
           <p className="fine-print center">
             HTML dent file {dent.bytes ? `· ${bytesLabel(dent.bytes)}` : ""} ·
@@ -249,7 +255,7 @@ export function Detail() {
             </div>
           )}
           <p className="import-note">
-            Already have Booplio? Import the file in Custom dent designs.{" "}
+            You can also import the downloaded file in Custom dent designs.{" "}
             <Link to="/guide">
               Show me how <ArrowLeft className="rotate" size={13} />
             </Link>

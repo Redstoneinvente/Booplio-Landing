@@ -1,0 +1,11 @@
+import { copyFile, mkdir, readFile, writeFile } from "node:fs/promises";
+const root = new URL("../", import.meta.url);
+await copyFile(new URL("cloudflare/worker.js", root), new URL("dist/_worker.js", root));
+await writeFile(new URL("dist/_routes.json", root), JSON.stringify({ version: 1, include: ["/api/*"], exclude: [] }));
+const configured = JSON.parse(await readFile(new URL("android-app-links.json", root), "utf8"));
+const fingerprints = process.env.BOOPLIO_PLAY_SIGNING_SHA256 ? process.env.BOOPLIO_PLAY_SIGNING_SHA256.split(",").map(v => v.trim()) : configured.playSigningFingerprints;
+if (!Array.isArray(fingerprints) || fingerprints.some(v => !/^([A-Fa-f0-9]{2}:){31}[A-Fa-f0-9]{2}$/.test(v))) throw new Error("Invalid Play signing SHA-256 fingerprint");
+const links = fingerprints.length ? [{ relation: ["delegate_permission/common.handle_all_urls"], target: { namespace: "android_app", package_name: "com.redstoneinvente.booplio", sha256_cert_fingerprints: fingerprints } }] : [];
+await mkdir(new URL("dist/.well-known/", root), { recursive: true });
+await writeFile(new URL("dist/.well-known/assetlinks.json", root), JSON.stringify(links));
+if (!fingerprints.length) console.warn("App Links: Play signing certificate not configured. Explicit app buttons and HTML downloads remain available.");

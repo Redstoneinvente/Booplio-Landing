@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { useStore } from "./store";
 import { Explore } from "./pages/Explore";
+import { OpenTemplate } from "./pages/OpenTemplate";
 import { Detail } from "./pages/Detail";
 import { Account } from "./pages/Account";
 import { Creator, SavedPage, Activity } from "./pages/Community";
@@ -141,6 +142,7 @@ function Shell() {
           <Route path="/" element={<Explore />} />
           <Route path="/search" element={<Explore searchPage />} />
           <Route path="/collection/:slug" element={<Explore collection />} />
+          <Route path="/open-template" element={<OpenTemplate />} />
           <Route path="/dent/:id" element={<Detail />} />
           <Route path="/creator/:id" element={<Creator />} />
           <Route path="/saved" element={<SavedPage />} />

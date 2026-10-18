@@ -4,6 +4,7 @@ import { getStorage } from "firebase-admin/storage";
 import { getAuth } from "firebase-admin/auth";
 import {
   onCall,
+  onRequest,
   HttpsError,
   CallableRequest,
 } from "firebase-functions/v2/https";
@@ -18,6 +19,8 @@ import {
   newerVersion,
   searchTokens,
 } from "./validation.js";
+import { readFileSync, createReadStream } from "node:fs";
+import { boundedHtml, publicDownloadHandler, maximumTemplateBytes } from "./template-download.js";
 initializeApp();
 setGlobalOptions({
   region: "us-central1",
@@ -365,6 +368,27 @@ export const setDentVisibility = onCall(settings, async (req) => {
   });
   return { done: true };
 });
+const starterDirectory = new URL("./starters/", import.meta.url);
+const starterManifest = JSON.parse(readFileSync(new URL("manifest.json", starterDirectory), "utf8")) as Record<string, string>;
+export const templateDownload = onRequest({ invoker: "public" }, publicDownloadHandler(async (id) => {
+  if (Object.hasOwn(starterManifest, id)) {
+    return boundedHtml(createReadStream(new URL(starterManifest[id], starterDirectory)));
+  }
+  const live = await db.doc(`dents/${id}`).get();
+  if (!live.exists || live.data()?.status !== "published" || live.data()?.moderatorHidden === true) return null;
+  const revision = live.data()!.currentRevision;
+  if (typeof revision !== "string" || !/^[A-Za-z0-9-]+$/.test(revision)) return null;
+  const version = await db.doc(`dents/${id}/versions/${revision}`).get();
+  const data = version.data();
+  if (!data || typeof data.filePath !== "string" || data.bytes > maximumTemplateBytes) return null;
+  const file = bucket().file(data.filePath);
+  const [metadata] = await file.getMetadata();
+  if (!Number.isFinite(Number(metadata.size)) || Number(metadata.size) > maximumTemplateBytes) throw new Error("oversized");
+  const buffer = await boundedHtml(file.createReadStream());
+  const current = await live.ref.get();
+  if (current.data()?.status !== "published" || current.data()?.moderatorHidden === true || current.data()?.currentRevision !== revision) return null;
+  return buffer;
+}));
 export const getDentFile = onCall(settings, async (req) => {
   const input = parse(
     z

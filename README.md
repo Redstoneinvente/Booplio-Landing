@@ -142,3 +142,29 @@ Review the marketplace-specific privacy policy and community terms before launch
 - https://firebase.google.com/docs/functions/callable
 - https://firebase.google.com/docs/firestore/security/get-started
 - https://firebase.google.com/docs/storage/web/start
+
+## Open in Booplio (Android 2.7.0+)
+
+Template detail pages now provide a real, user-clicked HTTPS link to `/open-template?id=…&kind=…&name=…` on `booplio.redstoneinvente.com`. Pointer-down lifts a small design badge toward the top of the viewport. Reduced motion disables it; navigation is never delayed. The website never claims that an import completed. The Android app asks for consent and handles the actual import.
+
+`/open-template` renders a browser fallback with the real listing, HTML download, and explicit app launch. Android Chrome gets a package-targeted intent with `/templates/ID` as its non-launching browser fallback. Other browsers get the explicit `booplio://template` link. Native entry routes are mapped into the existing hash router without redirecting away from the domain. Assets use root paths so `/templates/ID` can load reliably. No page automatically launches an app.
+
+The public endpoint is `GET /api/templates/ID/download` (also supports HEAD). It returns the exact UTF-8 HTML bytes as an attachment, with sandbox CSP and no JSON envelope or redirects. The HTTP Firebase function `templateDownload` reads only currently published, non-hidden listings and their approved current revision; it never accepts a draft/version override or uses browser credentials. It checks stored size, bounds the actual stream to 1 MiB, validates UTF-8, and rechecks publication before returning. Storage and Firestore rules are unchanged. Original starter files are packaged with the backend during its build.
+
+For Firebase Hosting, `firebase.json` routes `/api/**` to `templateDownload` before the SPA fallback. Deploy after a Firebase CLI sign-in:
+
+```bash
+FIREBASE_FUNCTIONS_DISCOVERY_OUTPUT_PATH=true npx -y firebase-tools@latest deploy --only functions:templateDownload,hosting --project booplio-redstoneinvente --non-interactive
+```
+
+For Cloudflare Pages, keep build command `npm run build` and output `dist`. The build emits an advanced-mode `_worker.js` and `_routes.json` that route only `/api/*` through the Worker. Starter downloads are served from the Pages asset binding; community downloads proxy the public Firebase HTTP function without forwarding cookies or authorization headers. It rejects redirects, oversized/non-UTF-8 responses and unexpected content types. Do not deploy the Firebase `functions/` folder as Pages Functions: the generated advanced-mode Worker replaces Pages' folder-based routing. Firebase Hosting ignores the Cloudflare-specific output files. A plain GitHub Pages deployment cannot serve this dynamic API.
+
+### Verified Android links
+
+The Play app signing certificate fingerprint is not present in the app handoff or repository. No fingerprint has been invented or taken from a development/upload key. Until configured, the build emits `/.well-known/assetlinks.json` as `[]`, and explicit intent/custom-scheme buttons plus HTML downloads remain available. Automatic verified HTTPS opening is not enabled by this empty association file.
+
+Copy the real **Play Console → App integrity → App signing key certificate → SHA-256** into `android-app-links.json`'s `playSigningFingerprints` array, preserving the colon-separated format, then rebuild and redeploy. Alternatively set `BOOPLIO_PLAY_SIGNING_SHA256` to a comma-separated list of real signing fingerprints in the Cloudflare build environment. The build validates each fingerprint and emits the Android association for `com.redstoneinvente.booplio`. This public certificate fingerprint is not a private signing key. Do not supply keystores, passwords or private keys.
+
+The exact association URL must return JSON with no redirects on the custom domain. Install an Android build containing the 2.7.0 receiver, then verify links on a real phone and test the consent/ignore, offline/retry, installed/uninstalled, and file-manager paths from the app handoff. Automated website tests cannot establish native browser/Android handoff behavior.
+
+New tests cover query validation, safe names, intent fallbacks, deep entry routes, exact bytes, UTF-8 and streaming limits, proxy redirect rejection, and the public endpoint's published/pending/hidden/deleted lifecycle against Firebase emulators. Browser visual QA and real Android end-to-end testing have not been performed in this environment.
